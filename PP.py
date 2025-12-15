@@ -155,16 +155,18 @@ def run_sector_analysis():
                 sector_perf[sector].append(change)
         except: pass
     data = []
-for s, c in sector_perf.items():
-    c = [x for x in c if pd.notna(x)]  # remove NaNs
-    if len(c) == 0:
-        continue  # skip empty sectors safely
-    data.append({
-        "Sector": s,
-        "Change": round(float(np.mean(c)), 2)
-    })
-    return pd.DataFrame(data)
+    for s, c in sector_perf.items():
+        c = [x for x in c if pd.notna(x)]
+        if len(c) == 0:
+            continue
+        data.append({
+            "Sector": s,
+            "Change": round(float(np.mean(c)), 2)
+        })
 
+    # ✅ return INSIDE function
+    return pd.DataFrame(data)
+    
 def predict_stock_price(symbol, days=7):
     try:
         df = yf.download(symbol, period="6mo", progress=False)
