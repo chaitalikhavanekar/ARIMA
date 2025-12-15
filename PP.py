@@ -145,26 +145,37 @@ def black_scholes(S, K, T, r, sigma, option_type='call'):
 # --- AI ENGINES ---
 def run_sector_analysis():
     sector_perf = {}
+
     for ticker, sector in STOCK_SECTOR_MAP.items():
         try:
             df = yf.download(ticker, period="2d", progress=False)
-            if len(df) >= 2:
-                if isinstance(df.columns, pd.MultiIndex): df.columns = df.columns.get_level_values(0)
-                change = ((df['Close'].iloc[-1] - df['Close'].iloc[-2]) / df['Close'].iloc[-2]) * 100
-                if sector not in sector_perf: sector_perf[sector] = []
-                sector_perf[sector].append(change)
-        except: pass
+
+            if len(df) < 2:
+                continue
+
+            if isinstance(df.columns, pd.MultiIndex):
+                df.columns = df.columns.get_level_values(0)
+
+            change = ((df['Close'].iloc[-1] - df['Close'].iloc[-2]) / df['Close'].iloc[-2]) * 100
+
+            try:
+                change = float(change)  # 🔥 critical line
+                sector_perf.setdefault(sector, []).append(change)
+            except:
+                pass
+
+        except:
+            pass
+
     data = []
     for s, c in sector_perf.items():
-        c = [x for x in c if pd.notna(x)]
-        if len(c) == 0:
+        if not c:
             continue
         data.append({
             "Sector": s,
-            "Change": round(float(np.mean(c)), 2)
+            "Change": round(sum(c) / len(c), 2)
         })
 
-    # ✅ return INSIDE function
     return pd.DataFrame(data)
     
 def predict_stock_price(symbol, days=7):
